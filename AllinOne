@@ -1,0 +1,46 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import re
+
+#Converte o excel para lista
+df = pd.read_excel('AllMagicCards.xlsx').values.tolist()
+academia = []
+
+for x in range(df):
+    req2 = requests.get('https://www.academiadejogos.com.br/busca?q=counterspell&ordem='+str(df[x][0]).replace(' ','+'))
+    lista = []
+    apagar = []
+    preco = []
+    
+    #verifica se o link deu retorno positivo
+    if req2.status_code == 200:
+        #Parse
+        soup2 = BeautifulSoup(req2.content, 'html.parser')
+        
+        #Se a pagina não contiver nenhum item manda 0 pra lista
+        nenhum_encontrado = soup2.findAll('span',{'class':'val'})
+        if nenhum_encontrado == 0:
+            academia.append(0)
+        else:    
+            #Pega todas cartas da pagina e transforma em texto
+            itens = soup2.findAll('a',{'class':'item'})
+            for x in range(len(itens)):
+                lista.append(itens[x].text)        
+
+            #Registra em que posições estão os itens esgotados e os elimina da lista
+            for x in range(len(lista)):
+                if 'esgotado' in lista[x]:
+                    apagar.append(x)
+            apagar.reverse()
+            for x in apagar:
+                del(lista[x])
+
+            #Elimina todos a informação que não seja o preço e separa o valor minimo da carta
+            for x in range(len(lista)):
+                teste1 = re.findall(r"[\w,/']+",lista[x])
+                preco.append(float(teste1[8].replace(',','.')))
+            academia.append(min(preco))
+    #Se o retorno do link foi negativo (-=200) da um append de erro na lista
+    else:
+        academia.append('Erro no link')
