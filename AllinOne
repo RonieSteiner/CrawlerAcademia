@@ -44,3 +44,9 @@ for x in range(df):
     #Se o retorno do link foi negativo (-=200) da um append de erro na lista
     else:
         academia.append('Erro no link')
+
+#Exporta para um excel
+df = pd.DataFrame(lista)
+writer = pd.ExcelWriter('AllMagicCard_com_preco_ACADEMIA.xlsx', engine='xlsxwriter')
+df.to_excel(writer,sheet_name='welcome',index=False)
+writer.save()
